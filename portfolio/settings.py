@@ -22,7 +22,8 @@ load_dotenv()
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['albaraa-portfolio.herokuapp.com', 'www.albaraa-alsadeq.tech']
+
 
 SECRET_KEY = '123ABczaq$'
 
