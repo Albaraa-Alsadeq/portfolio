@@ -111,14 +111,14 @@ hr {
   }
 @keyframes animate {
     30%{
-        content: 'Abdelaali ES SALMI';
+        content: 'Al-baraa Al-sadeq';
         opacity: 1;
     }
     45%{
         opacity: 0;
     }
     65%{
-        content: 'Programmer';
+        content: 'Ai Developer';
         opacity: 1;
         
     }
@@ -126,7 +126,7 @@ hr {
         opacity: 0;
     }
     80%{
-        content: 'Full Stack Developer';
+        content: 'Data Scientist & Machine Learning Engineer';
         opacity: 1;
     }
 }
