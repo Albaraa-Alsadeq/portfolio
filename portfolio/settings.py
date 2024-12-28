@@ -1,30 +1,59 @@
-from decouple import config
-import dj_database_url
 
 import os
+import django_heroku
+from decouple import config
+import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import os
+import dj_database_url
+from dotenv import load_dotenv
+import environ
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# تهيئة env
+env = environ.Env()
+environ.Env.read_env()  # تحميل المتغيرات من ملف .env
+
+load_dotenv()
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
-CORS_ORIGIN_ALLOW_ALL = True # If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
-CORS_ALLOW_CREDENTIALS = True
+SECRET_KEY = '123ABczaq$'
 
-LOGIN_URL = '/dashboard/login/'
-LOGOUT_URL = '/dashboard/logout/'
 
-# Application definition
+
+
+# Define BASE_DIR early to avoid errors
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+]
+
+# After BASE_DIR is defined, use django_heroku settings
+django_heroku.settings(locals())
+
+
+print("Environment Variables:", os.environ)
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+print("Current SECRET_KEY:", config('SECRET_KEY'))
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -42,20 +71,10 @@ INSTALLED_APPS = [
 
     'ckeditor',
     'rest_framework',
+    'portfolio',
 ]
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    # whitenoise for static files
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-]
 
 ROOT_URLCONF = 'portfolio.urls'
 
@@ -72,7 +91,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             'libraries':{
-                # make your file entry here.
                 'filter_tags': 'info.templatetags.filter',
             }
         },
@@ -82,45 +100,56 @@ TEMPLATES = [
 WSGI_APPLICATION = 'portfolio.wsgi.application'
 
 
-if not DEBUG:
-    # Database
-    # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=config('DATABASE_URL')
-        )
-    }
-    
-    # Storage settings
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': config('CLOUD_NAME', default=''),
-        'API_KEY': config('API_KEY', default=''),
-        'API_SECRET': config('API_SECRET', default=''),
-    }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL', 'postgres://POSTGRES:123ABczaq$@portfoliodatabase1.cdkiy46kozvg.eu-north-1.rds.amazonaws.com:5432/portfoliodatabase1')
+    )
+}
 
+# Database settings for development and production
+
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'django_portfolio',  # قاعدة البيانات المحلية
+            'USER': 'postgres',
+            'PASSWORD': '123ABczaq$',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'portfoliodatabase1',
+            'USER': 'postgres',
+            'PASSWORD': '123ABczaq$',
+            'HOST': 'portfoliodatabase1.cdkiy46kozvg.eu-north-1.rds.amazonaws.com',
+            'PORT': '5432',
         }
     }
 
+    # تكوين Cloudinary لتخزين الملفات في بيئة الإنتاج
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': 'drys4dgez',
+        'API_KEY': '377643715332651',
+        'API_SECRET': 'vfoA2eMe6JHXtzM4GYXsSj-wnnI',
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+
+
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST = "alsadeq.albaraagmail.com"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
-
-
-
 # Password validation
-# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -136,23 +165,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/2.2/topics/i18n/
-
+# Internationalization settings
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -162,5 +182,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'portfolio/static/'),
 )
 
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+print(f"Loaded DATABASE_URL: {config('DATABASE_URL', default='NOT FOUND')}")
+print(f"Database settings: {DATABASES}")
